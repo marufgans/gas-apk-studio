@@ -1,0 +1,1905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GAS → APK Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Oxanium:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #060a0f;
+  --bg2: #0b1018;
+  --surface: #0f1520;
+  --surface2: #141d2b;
+  --surface3: #1a2535;
+  --border: #1e2d42;
+  --border2: #253650;
+  --cyan: #00e5cc;
+  --cyan2: #00b8a4;
+  --blue: #3d8ef0;
+  --green: #00d97e;
+  --yellow: #ffd24d;
+  --red: #ff4d6a;
+  --orange: #ff7c3a;
+  --text: #d0dff0;
+  --text2: #6a87a8;
+  --text3: #364d66;
+  --mono: 'IBM Plex Mono', monospace;
+  --display: 'Oxanium', sans-serif;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Grid bg */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,229,204,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,204,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* HEADER */
+header {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  height: 48px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 1px;
+}
+
+.logo-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  background: rgba(0,229,204,0.08);
+  border: 1px solid rgba(0,229,204,0.25);
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--cyan);
+  font-family: var(--mono);
+  letter-spacing: 2px;
+}
+
+.logo-sep {
+  color: var(--cyan);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.header-status {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 11px;
+  color: var(--text2);
+}
+
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  font-size: 10px;
+}
+
+.dot { width: 6px; height: 6px; border-radius: 50%; }
+.dot.cyan { background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
+.dot.green { background: var(--green); }
+.dot.yellow { background: var(--yellow); }
+.dot.gray { background: var(--text3); }
+
+/* TABS */
+.tabs {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 16px;
+  border: none;
+  background: none;
+  color: var(--text3);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.tab:hover { color: var(--text2); }
+.tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+.tab-num {
+  width: 18px; height: 18px;
+  border-radius: 4px;
+  background: var(--surface3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text3);
+  flex-shrink: 0;
+}
+.tab.active .tab-num { background: rgba(0,229,204,0.15); color: var(--cyan); }
+.tab-badge {
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(0,217,126,0.15);
+  color: var(--green);
+}
+
+/* MAIN */
+.main {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+}
+
+.panel {
+  display: none;
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  gap: 16px;
+  flex-direction: column;
+}
+.panel.active { display: flex; }
+
+/* CARDS */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--display);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.card-body { padding: 16px; }
+
+/* UPLOAD ZONE */
+.upload-zone {
+  border: 1.5px dashed var(--border2);
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  background: rgba(0,229,204,0.01);
+}
+.upload-zone:hover, .upload-zone.over {
+  border-color: var(--cyan);
+  background: rgba(0,229,204,0.04);
+}
+.upload-zone input[type=file] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%;
+}
+.upload-ico { font-size: 24px; margin-bottom: 8px; }
+.upload-title { color: var(--text); font-size: 13px; margin-bottom: 4px; }
+.upload-sub { color: var(--text3); font-size: 11px; }
+
+/* FILE LIST */
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  margin-top: 8px;
+  background: var(--bg2);
+  animation: fadein 0.2s ease;
+}
+@keyframes fadein { from { opacity:0; transform: translateY(-4px); } to { opacity:1; transform:none; } }
+.file-ext {
+  padding: 3px 7px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--display);
+  letter-spacing: 1px;
+}
+.ext-gs { background: rgba(255, 196, 0, 0.15); color: #ffc400; }
+.ext-html { background: rgba(61, 142, 240, 0.15); color: var(--blue); }
+.file-name { flex: 1; color: var(--text); font-size: 12px; }
+.file-size { color: var(--text3); font-size: 11px; }
+.file-remove {
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0 4px;
+  transition: color 0.15s;
+}
+.file-remove:hover { color: var(--red); }
+
+/* GRID */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+/* FORM */
+.field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+label {
+  font-size: 10px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+label .req { color: var(--cyan); }
+input[type=text], input[type=password], input[type=number], select {
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  padding: 8px 11px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  width: 100%;
+}
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--cyan2);
+  box-shadow: 0 0 0 3px rgba(0,184,164,0.12);
+}
+input::placeholder { color: var(--text3); }
+input.invalid { border-color: var(--red); }
+.hint { font-size: 10.5px; color: var(--text3); margin-top: 3px; }
+
+/* RADIO */
+.radio-row { display: flex; gap: 8px; }
+.r-opt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text2);
+  transition: all 0.15s;
+}
+.r-opt:has(input:checked) {
+  border-color: var(--cyan2);
+  background: rgba(0,184,164,0.08);
+  color: var(--cyan);
+}
+.r-opt input { display: none; }
+
+/* ANALYZE - function list */
+.fn-list { display: flex; flex-direction: column; gap: 4px; }
+.fn-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 5px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  font-size: 11.5px;
+  animation: fadein 0.2s ease;
+}
+.fn-item.called { border-color: rgba(0,217,126,0.3); background: rgba(0,217,126,0.04); }
+.fn-item.notcalled { border-color: var(--border); }
+.fn-name { color: var(--yellow); font-weight: 600; font-size: 12px; }
+.fn-calls { color: var(--text3); font-size: 11px; margin-top: 2px; }
+.fn-badge {
+  margin-left: auto;
+  font-size: 9.5px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.fb-used { background: rgba(0,217,126,0.15); color: var(--green); }
+.fb-unused { background: rgba(54,77,102,0.5); color: var(--text3); }
+
+/* CALL ITEM */
+.call-item {
+  padding: 8px 12px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  margin-bottom: 4px;
+  font-size: 11.5px;
+}
+.call-fn { color: var(--blue); }
+.call-src { color: var(--text3); font-size: 10.5px; margin-top: 2px; }
+
+/* CODE PREVIEW */
+.code-block {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 11px;
+  color: var(--text2);
+  line-height: 1.7;
+  overflow-x: auto;
+  white-space: pre;
+  font-family: var(--mono);
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.kw { color: var(--blue); }
+.str { color: var(--green); }
+.fn-hl { color: var(--yellow); }
+.cmt { color: var(--text3); }
+.param { color: var(--orange); }
+
+/* PREVIEW */
+#preview-panel {
+  padding: 0;
+  flex-direction: column;
+}
+.preview-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  z-index: 5;
+}
+.device-btn {
+  background: none;
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  color: var(--text2);
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.device-btn.active, .device-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+.file-select {
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  color: var(--text2);
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 5px 10px;
+}
+.preview-area {
+  flex: 1;
+  background: #0a0c10;
+  background-image: radial-gradient(circle at 1px 1px, #141d2b 1px, transparent 0);
+  background-size: 20px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow: auto;
+}
+.phone-wrap { position: relative; }
+.phone-shell {
+  background: var(--surface);
+  border: 3px solid var(--border2);
+  border-radius: 32px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px var(--border), 0 20px 60px rgba(0,0,0,0.7), 0 0 40px rgba(0,229,204,0.05);
+  transition: all 0.3s;
+}
+.phone-shell.mobile { width: 380px; height: 700px; }
+.phone-shell.tablet { width: 580px; height: 700px; }
+.phone-shell.desktop { width: 880px; height: 580px; border-radius: 10px; }
+.phone-notch {
+  height: 26px;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+}
+.notch { width: 80px; height: 12px; background: var(--surface2); border-radius: 6px; }
+.phone-screen { background: white; width: 100%; }
+.phone-shell.mobile .phone-screen { height: calc(700px - 26px - 6px); }
+.phone-shell.tablet .phone-screen { height: calc(700px - 26px - 6px); }
+.phone-shell.desktop .phone-screen { height: calc(580px - 6px); }
+.phone-screen iframe { width: 100%; height: 100%; border: none; }
+.preview-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 10px;
+  color: var(--text3);
+  font-size: 12px;
+}
+
+/* GAS URL banner */
+.gas-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(255,210,77,0.06);
+  border: 1px solid rgba(255,210,77,0.2);
+  border-radius: 5px;
+  font-size: 11px;
+  color: var(--yellow);
+  margin-bottom: 14px;
+}
+
+/* BUILD */
+.build-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.build-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+.build-status {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 700;
+}
+.build-btn {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--cyan);
+  color: var(--bg);
+  border: none;
+  border-radius: 6px;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 12px;
+  padding: 9px 18px;
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.5px;
+}
+.build-btn:hover { background: var(--cyan2); transform: translateY(-1px); }
+.build-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+.steps-list { padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 13px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  font-size: 11.5px;
+  transition: all 0.2s;
+}
+.step-item.s-active { border-color: rgba(0,229,204,0.35); background: rgba(0,229,204,0.04); }
+.step-item.s-done { border-color: rgba(0,217,126,0.3); background: rgba(0,217,126,0.04); }
+.step-item.s-error { border-color: rgba(255,77,106,0.3); background: rgba(255,77,106,0.04); }
+.step-n {
+  width: 22px; height: 22px;
+  border-radius: 5px;
+  background: var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700;
+  color: var(--text3);
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.s-active .step-n { background: var(--cyan); color: var(--bg); animation: pulse 1s ease infinite; }
+.s-done .step-n { background: var(--green); color: var(--bg); }
+.s-error .step-n { background: var(--red); color: white; }
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
+.step-info { flex: 1; }
+.step-label { color: var(--text); }
+.step-desc { color: var(--text3); font-size: 10.5px; margin-top: 2px; }
+.step-tag {
+  font-size: 9.5px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  background: var(--border2);
+  color: var(--text3);
+}
+.s-done .step-tag { background: rgba(0,217,126,0.15); color: var(--green); }
+.s-active .step-tag { background: rgba(0,229,204,0.12); color: var(--cyan); }
+.s-error .step-tag { background: rgba(255,77,106,0.15); color: var(--red); }
+
+.build-log {
+  background: var(--bg);
+  padding: 12px 14px;
+  max-height: 220px;
+  overflow-y: auto;
+  font-size: 11px;
+  line-height: 1.9;
+  border-top: 1px solid var(--border);
+}
+.l { display: flex; gap: 9px; }
+.lt { color: var(--text3); flex-shrink: 0; }
+.lm { flex: 1; }
+.lc { color: var(--cyan); }
+.lg { color: var(--green); }
+.lr { color: var(--red); }
+.ly { color: var(--yellow); }
+
+/* RESULT */
+.result-box {
+  display: none;
+  border: 1px solid rgba(0,217,126,0.3);
+  border-radius: 8px;
+  padding: 18px;
+  background: rgba(0,217,126,0.04);
+}
+.result-box.show { display: block; }
+.result-title {
+  font-family: var(--display);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--green);
+  margin-bottom: 10px;
+}
+.action-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.btn-a {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--green); color: var(--bg);
+  border: none; border-radius: 6px;
+  font-family: var(--display); font-weight: 700; font-size: 12px;
+  padding: 9px 16px; cursor: pointer;
+  text-decoration: none; transition: all 0.15s;
+}
+.btn-a:hover { filter: brightness(1.1); }
+.btn-b {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--surface2); color: var(--text2);
+  border: 1px solid var(--border2);
+  border-radius: 6px; font-family: var(--display); font-weight: 600; font-size: 12px;
+  padding: 9px 16px; cursor: pointer;
+  text-decoration: none; transition: all 0.15s;
+}
+.btn-b:hover { border-color: var(--cyan); color: var(--cyan); }
+
+/* INFO BOXES */
+.info-box {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 13px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  line-height: 1.6;
+}
+.info-box.cyan { background: rgba(0,229,204,0.06); border: 1px solid rgba(0,229,204,0.2); color: var(--cyan); }
+.info-box.yellow { background: rgba(255,210,77,0.06); border: 1px solid rgba(255,210,77,0.2); color: var(--yellow); }
+.info-box.green { background: rgba(0,217,126,0.06); border: 1px solid rgba(0,217,126,0.2); color: var(--green); }
+.info-box.red { background: rgba(255,77,106,0.06); border: 1px solid rgba(255,77,106,0.2); color: var(--red); }
+
+/* STATS ROW */
+.stats-row { display: flex; gap: 10px; margin-bottom: 16px; }
+.stat-card {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 12px 14px;
+  text-align: center;
+}
+.stat-num { font-family: var(--display); font-size: 22px; font-weight: 800; color: var(--cyan); }
+.stat-label { font-size: 10px; color: var(--text3); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.8px; }
+
+/* COLLAPSIBLE */
+.collapse-btn {
+  background: none;
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  color: var(--text2);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.collapse-btn:hover { border-color: var(--cyan2); color: var(--cyan); }
+
+/* TOAST */
+.toast-wrap {
+  position: fixed;
+  bottom: 16px; right: 16px;
+  z-index: 1000;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.toast {
+  padding: 10px 14px;
+  border-radius: 7px;
+  font-size: 11.5px;
+  display: flex; align-items: center; gap: 8px;
+  animation: slideUp 0.2s ease;
+  max-width: 300px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+.toast.g { background: rgba(0,217,126,0.12); border: 1px solid rgba(0,217,126,0.35); color: var(--green); }
+.toast.r { background: rgba(255,77,106,0.12); border: 1px solid rgba(255,77,106,0.35); color: var(--red); }
+.toast.c { background: rgba(0,229,204,0.1); border: 1px solid rgba(0,229,204,0.3); color: var(--cyan); }
+@keyframes slideUp { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform:none; } }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span style="color:var(--yellow)">GAS</span>
+    <span class="logo-sep">→</span>
+    <span style="color:var(--cyan)">APK</span>
+    <span style="color:var(--text3);font-weight:400;font-size:12px;">Studio</span>
+  </div>
+  <div class="header-status">
+    <div class="status-pill">
+      <div class="dot cyan" id="hDotGs"></div>
+      <span id="hLabelGs">code.gs: none</span>
+    </div>
+    <div class="status-pill">
+      <div class="dot gray" id="hDotHtml"></div>
+      <span id="hLabelHtml">HTML: 0 files</span>
+    </div>
+    <div class="logo-badge">CORDOVA + GHA</div>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('upload',this)">
+    <div class="tab-num">1</div> Upload Files
+  </button>
+  <button class="tab" onclick="switchTab('analyze',this)">
+    <div class="tab-num">2</div> Analyze
+    <span class="tab-badge" id="fnCountBadge" style="display:none">0 fn</span>
+  </button>
+  <button class="tab" onclick="switchTab('configure',this)">
+    <div class="tab-num">3</div> Configure
+  </button>
+  <button class="tab" onclick="switchTab('preview',this)">
+    <div class="tab-num">4</div> Preview
+  </button>
+  <button class="tab" onclick="switchTab('build',this)">
+    <div class="tab-num">5</div> Build APK
+  </button>
+</div>
+
+<div class="main">
+
+<!-- ==================== UPLOAD ==================== -->
+<div id="panel-upload" class="panel active">
+
+  <div class="grid-2">
+    <!-- code.gs upload -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">📜 code.gs</div>
+        <span style="font-size:10px;color:var(--text3)">Server-side logic</span>
+      </div>
+      <div class="card-body">
+        <div class="info-box yellow" style="margin-bottom:12px;">
+          <span>⚡</span>
+          <span>Functions inside code.gs will be auto-detected and converted to fetch() calls in the APK.</span>
+        </div>
+        <div class="upload-zone" id="gsZone"
+          ondragover="dov(event,'gsZone')" ondragleave="dlv(event,'gsZone')" ondrop="dropGs(event)"
+          onclick="document.getElementById('gsFile').click()">
+          <input type="file" id="gsFile" accept=".gs,.txt,.js,text/plain,application/javascript" style="display:none" onchange="loadGs(event)">
+          <div class="upload-ico">📄</div>
+          <div class="upload-title">Drop code.gs here</div>
+          <div class="upload-sub">atau klik browse — pilih "All Files" jika .gs tidak muncul</div>
+        </div>
+        <div id="gsLoaded" style="display:none">
+          <div class="file-item">
+            <span class="file-ext ext-gs">GS</span>
+            <span class="file-name" id="gsName">code.gs</span>
+            <span class="file-size" id="gsSize"></span>
+            <button class="file-remove" onclick="removeGs()">×</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HTML upload -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">🌐 HTML Files</div>
+        <span style="font-size:10px;color:var(--text3)">Multiple files supported</span>
+      </div>
+      <div class="card-body">
+        <div class="info-box cyan" style="margin-bottom:12px;">
+          <span>💡</span>
+          <span>All CSS & JS must be inline. Polyfill shim will be injected to replace <code>google.script.run</code>.</span>
+        </div>
+        <div class="upload-zone" id="htmlZone"
+          ondragover="dov(event,'htmlZone')" ondragleave="dlv(event,'htmlZone')" ondrop="dropHtml(event)"
+          onclick="document.getElementById('htmlFile').click()">
+          <input type="file" id="htmlFile" accept=".html,.htm,text/html" multiple style="display:none" onchange="loadHtmlFiles(event)">
+          <div class="upload-ico">📋</div>
+          <div class="upload-title">Drop HTML file(s) here</div>
+          <div class="upload-sub">or click to browse (.html) — multiple OK</div>
+        </div>
+        <div id="htmlList"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="nextCard" style="display:none">
+    <div class="card-body">
+      <div class="info-box green">
+        <span>✅</span>
+        <div>
+          Files uploaded. Click <strong>Analyze</strong> tab to review detected functions and compatibility, then move to Configure.
+          <br><button onclick="switchTabByName('analyze')" style="background:none;border:none;color:var(--cyan);cursor:pointer;font-family:var(--mono);font-size:11px;margin-top:6px;text-decoration:underline;">→ Go to Analyze</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ==================== ANALYZE ==================== -->
+<div id="panel-analyze" class="panel">
+
+  <div id="analyzeEmpty" class="card">
+    <div class="card-body">
+      <div class="info-box yellow"><span>⚠</span> Upload code.gs and at least one HTML file first.</div>
+    </div>
+  </div>
+
+  <div id="analyzeContent" style="display:none">
+
+    <div class="stats-row" id="statsRow"></div>
+
+    <div class="grid-2">
+      <!-- Functions in code.gs -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">📜 Functions in code.gs</div>
+          <button class="collapse-btn" onclick="toggleSection('fnSection')">▾ collapse</button>
+        </div>
+        <div class="card-body" id="fnSection">
+          <div class="fn-list" id="fnList"></div>
+        </div>
+      </div>
+
+      <!-- google.script.run calls in HTML -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">🔗 google.script.run Calls</div>
+          <button class="collapse-btn" onclick="toggleSection('callSection')">▾ collapse</button>
+        </div>
+        <div class="card-body" id="callSection">
+          <div id="callList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Generated code preview -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">⚙️ Auto-generated: doPost Handler for code.gs</div>
+        <button class="collapse-btn" onclick="toggleSection('genSection')">▾ show/hide</button>
+      </div>
+      <div class="card-body" id="genSection" style="display:none">
+        <div class="info-box cyan" style="margin-bottom:10px;">
+          <span>📋</span>
+          <span>This code will be appended to your code.gs. It creates a REST endpoint so the APK can call your functions via fetch().</span>
+        </div>
+        <div class="code-block" id="genCode"></div>
+      </div>
+    </div>
+
+    <!-- Polyfill shim preview -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">💉 Auto-injected: google.script.run Polyfill</div>
+        <button class="collapse-btn" onclick="toggleSection('shimSection')">▾ show/hide</button>
+      </div>
+      <div class="card-body" id="shimSection" style="display:none">
+        <div class="info-box cyan" style="margin-bottom:10px;">
+          <span>🔄</span>
+          <span>This shim replaces <code style="color:var(--yellow)">google.script.run</code> with fetch() calls pointing to your GAS Web App URL. Auto-injected into every HTML file.</span>
+        </div>
+        <div class="code-block" id="shimCode"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ==================== CONFIGURE ==================== -->
+<div id="panel-configure" class="panel">
+
+  <!-- GAS Web App URL -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">🔗 Google Apps Script Web App URL</div>
+    </div>
+    <div class="card-body">
+      <div class="gas-banner">
+        ⚠ You must first deploy your code.gs as a Web App in Google Apps Script:
+        <em>Extensions → Apps Script → Deploy → New Deployment → Web App → Execute as: Me → Anyone can access</em>
+      </div>
+      <div class="field">
+        <label>Web App URL <span class="req">*</span></label>
+        <input type="text" id="gasUrl" placeholder="https://script.google.com/macros/s/AKfy.../exec" oninput="saveForm()">
+        <div class="hint">The /exec URL from your Apps Script deployment</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+
+    <!-- APK Config -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">📱 APK Configuration</div>
+      </div>
+      <div class="card-body">
+        <div class="field">
+          <label>App Name <span class="req">*</span></label>
+          <input type="text" id="apkName" placeholder="My GAS App" oninput="saveForm()">
+        </div>
+        <div class="field">
+          <label>Package Name <span class="req">*</span></label>
+          <input type="text" id="pkgName" placeholder="com.yourname.appname" oninput="saveForm()">
+          <div class="hint">reverse domain, e.g. com.mpks.pabrik</div>
+        </div>
+        <div class="grid-2" style="gap:10px">
+          <div class="field">
+            <label>Version Name</label>
+            <input type="text" id="verName" value="1.0.0" oninput="saveForm()">
+          </div>
+          <div class="field">
+            <label>Version Code</label>
+            <input type="number" id="verCode" value="1" min="1" oninput="saveForm()">
+          </div>
+        </div>
+        <div class="field">
+          <label>Entry HTML File</label>
+          <select id="entryFile" onchange="saveForm()">
+            <option value="">-- select main file --</option>
+          </select>
+          <div class="hint">The first page shown when app opens</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GitHub Config -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">🐙 GitHub Integration</div>
+      </div>
+      <div class="card-body">
+        <div class="field">
+          <label>GitHub Username <span class="req">*</span></label>
+          <input type="text" id="ghUser" placeholder="your-username" oninput="saveForm()">
+        </div>
+        <div class="field">
+          <label>Personal Access Token <span class="req">*</span></label>
+          <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx" oninput="saveForm()">
+          <div class="hint">Scopes: <code style="color:var(--cyan)">repo, workflow</code></div>
+        </div>
+        <div class="field">
+          <label>Repository Name <span class="req">*</span></label>
+          <input type="text" id="ghRepo" placeholder="my-gas-apk" oninput="saveForm()">
+        </div>
+        <div class="field">
+          <label>Visibility</label>
+          <div class="radio-row">
+            <label class="r-opt"><input type="radio" name="vis" value="false" checked> 🌍 Public</label>
+            <label class="r-opt"><input type="radio" name="vis" value="true"> 🔒 Private</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PREVIEW ==================== -->
+<div id="panel-preview" class="panel" style="padding:0;flex-direction:column;">
+  <div class="preview-toolbar">
+    <button class="device-btn active" onclick="setDevice('mobile',this)">📱 Mobile</button>
+    <button class="device-btn" onclick="setDevice('tablet',this)">💻 Tablet</button>
+    <button class="device-btn" onclick="setDevice('desktop',this)">🖥 Desktop</button>
+    <select class="file-select" id="previewSelect" onchange="updatePreview()"></select>
+    <button class="device-btn" onclick="updatePreview()">↻ Refresh</button>
+    <span style="font-size:10.5px;color:var(--text3);margin-left:auto;">
+      ℹ google.script.run shim active — mock responses shown
+    </span>
+  </div>
+  <div class="preview-area">
+    <div class="phone-wrap">
+      <div class="phone-shell mobile" id="phoneShell">
+        <div class="phone-notch"><div class="notch"></div></div>
+        <div class="phone-screen">
+          <div id="previewEmpty" class="preview-empty">
+            <div style="font-size:32px;opacity:0.3">📱</div>
+            <div>Upload HTML files to preview</div>
+          </div>
+          <iframe id="previewIframe" style="display:none;width:100%;height:100%;border:none;"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== BUILD ==================== -->
+<div id="panel-build" class="panel">
+
+  <div class="build-card">
+    <div class="build-header">
+      <div class="build-status">
+        <div class="dot gray" id="bDot" style="width:10px;height:10px;"></div>
+        <span id="bStatus">Ready to Build</span>
+      </div>
+      <button class="build-btn" id="buildBtn" onclick="startBuild()">▶ Build APK</button>
+    </div>
+
+    <div class="steps-list" id="stepsList">
+      <div class="step-item" id="st1">
+        <div class="step-n">1</div>
+        <div class="step-info">
+          <div class="step-label">Validate All Configuration</div>
+          <div class="step-desc">Check required fields, files, GAS URL</div>
+        </div>
+        <div class="step-tag">pending</div>
+      </div>
+      <div class="step-item" id="st2">
+        <div class="step-n">2</div>
+        <div class="step-info">
+          <div class="step-label">Create GitHub Repository</div>
+          <div class="step-desc">Via GitHub REST API</div>
+        </div>
+        <div class="step-tag">pending</div>
+      </div>
+      <div class="step-item" id="st3">
+        <div class="step-n">3</div>
+        <div class="step-info">
+          <div class="step-label">Push Cordova Project Files</div>
+          <div class="step-desc">config.xml, package.json, www/ folder</div>
+        </div>
+        <div class="step-tag">pending</div>
+      </div>
+      <div class="step-item" id="st4">
+        <div class="step-n">4</div>
+        <div class="step-info">
+          <div class="step-label">Inject Polyfill into HTML Files</div>
+          <div class="step-desc">Replace google.script.run with fetch()</div>
+        </div>
+        <div class="step-tag">pending</div>
+      </div>
+      <div class="step-item" id="st5">
+        <div class="step-n">5</div>
+        <div class="step-info">
+          <div class="step-label">Push GitHub Actions Workflow</div>
+          <div class="step-desc">Cordova Android build pipeline</div>
+        </div>
+        <div class="step-tag">pending</div>
+      </div>
+      <div class="step-item" id="st6">
+        <div class="step-n">6</div>
+        <div class="step-info">
+          <div class="step-label">Trigger Build & Confirm</div>
+          <div class="step-desc">GitHub Actions auto-runs on push</div>
+        </div>
+        <div class="step-tag">pending</div>
+      </div>
+    </div>
+
+    <div class="build-log" id="buildLog">
+      <div class="l"><span class="lt">--:--:--</span><span class="lm" style="color:var(--text3)">Waiting to start...</span></div>
+    </div>
+  </div>
+
+  <div class="result-box" id="resultBox">
+    <div class="result-title">✅ Build Triggered Successfully!</div>
+    <div style="color:var(--text2);font-size:12px;line-height:1.8;">
+      Your GAS → APK project is now on GitHub.<br>
+      GitHub Actions is building the debug APK — takes about <strong style="color:var(--text)">5–10 minutes</strong>.<br>
+      Download the <strong style="color:var(--text)">APK artifact</strong> from the Actions tab after the build completes.
+    </div>
+    <div class="action-btns">
+      <a class="btn-a" id="actionsUrl" href="#" target="_blank">🔗 View GitHub Actions</a>
+      <a class="btn-b" id="repoUrl" href="#" target="_blank">📁 View Repository</a>
+    </div>
+  </div>
+
+</div>
+
+</div><!-- main -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+// ====================================================
+// STATE
+// ====================================================
+let gsContent = null, gsFileName = null;
+let htmlFiles = []; // [{name, content, size}]
+let gsFunctions = []; // [{name}]
+let scriptRunCalls = []; // [{fn, file, context}]
+let building = false;
+
+// ====================================================
+// DRAG / DROP HELPERS
+// ====================================================
+function dov(e, id) { e.preventDefault(); document.getElementById(id).classList.add('over'); }
+function dlv(e, id) { document.getElementById(id).classList.remove('over'); }
+
+function dropGs(e) {
+  e.preventDefault();
+  dlv(e,'gsZone');
+  const f = e.dataTransfer.files[0];
+  if (f) processGs(f);
+  else toast('r', 'Tidak ada file terdeteksi');
+}
+function dropHtml(e) {
+  e.preventDefault();
+  dlv(e,'htmlZone');
+  const files = [...e.dataTransfer.files].filter(f => f.name.match(/\.html?$/i) || f.type === 'text/html');
+  if (files.length === 0) {
+    // Try accepting all files as HTML
+    [...e.dataTransfer.files].forEach(processHtml);
+  } else {
+    files.forEach(processHtml);
+  }
+}
+
+function loadGs(e) { if (e.target.files[0]) processGs(e.target.files[0]); }
+function loadHtmlFiles(e) { [...e.target.files].forEach(processHtml); }
+
+function processGs(file) {
+  const r = new FileReader();
+  r.onload = ev => {
+    gsContent = ev.target.result;
+    gsFileName = file.name;
+    document.getElementById('gsZone').style.display = 'none';
+    document.getElementById('gsLoaded').style.display = 'block';
+    document.getElementById('gsName').textContent = file.name;
+    document.getElementById('gsSize').textContent = fmtSize(file.size);
+    updateHeaderStatus();
+    runAnalysis();
+    checkNextCard();
+    toast('g', `${file.name} loaded (${fmtSize(file.size)})`);
+  };
+  r.onerror = () => toast('r', 'Gagal membaca file. Coba drag & drop langsung.');
+  r.readAsText(file);
+}
+
+function removeGs() {
+  gsContent = null; gsFileName = null;
+  document.getElementById('gsZone').style.display = 'block';
+  document.getElementById('gsLoaded').style.display = 'none';
+  document.getElementById('gsFile').value = '';
+  updateHeaderStatus();
+  runAnalysis();
+  checkNextCard();
+}
+
+function processHtml(file) {
+  if (htmlFiles.find(h => h.name === file.name)) {
+    toast('c', `${file.name} already added`);
+    return;
+  }
+  const r = new FileReader();
+  r.onload = ev => {
+    htmlFiles.push({ name: file.name, content: ev.target.result, size: file.size });
+    renderHtmlList();
+    updateHeaderStatus();
+    updateEntrySelect();
+    updatePreviewSelect();
+    runAnalysis();
+    checkNextCard();
+    toast('g', `${file.name} loaded (${fmtSize(file.size)})`);
+  };
+  r.readAsText(file);
+}
+
+function removeHtml(name) {
+  htmlFiles = htmlFiles.filter(h => h.name !== name);
+  renderHtmlList();
+  updateHeaderStatus();
+  updateEntrySelect();
+  updatePreviewSelect();
+  runAnalysis();
+  checkNextCard();
+}
+
+function renderHtmlList() {
+  const el = document.getElementById('htmlList');
+  el.innerHTML = htmlFiles.map(f => `
+    <div class="file-item">
+      <span class="file-ext ext-html">HTML</span>
+      <span class="file-name">${f.name}</span>
+      <span class="file-size">${fmtSize(f.size)}</span>
+      <button class="file-remove" onclick="removeHtml('${f.name}')">×</button>
+    </div>
+  `).join('');
+}
+
+function checkNextCard() {
+  document.getElementById('nextCard').style.display =
+    (gsContent && htmlFiles.length > 0) ? 'block' : 'none';
+}
+
+// ====================================================
+// ANALYSIS
+// ====================================================
+function runAnalysis() {
+  if (!gsContent && htmlFiles.length === 0) {
+    document.getElementById('analyzeEmpty').style.display = 'block';
+    document.getElementById('analyzeContent').style.display = 'none';
+    return;
+  }
+
+  // Parse functions from code.gs
+  gsFunctions = parseGsFunctions(gsContent || '');
+
+  // Parse google.script.run calls from all HTML files
+  scriptRunCalls = [];
+  htmlFiles.forEach(f => {
+    const calls = parseScriptRunCalls(f.content, f.name);
+    scriptRunCalls.push(...calls);
+  });
+
+  const usedFns = new Set(scriptRunCalls.map(c => c.fn));
+
+  // Update badge
+  document.getElementById('fnCountBadge').style.display = gsFunctions.length > 0 ? 'inline' : 'none';
+  document.getElementById('fnCountBadge').textContent = `${gsFunctions.length} fn`;
+
+  // Stats row
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-num" style="color:var(--yellow)">${gsFunctions.length}</div>
+      <div class="stat-label">Functions in GS</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:var(--blue)">${scriptRunCalls.length}</div>
+      <div class="stat-label">script.run Calls</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:var(--green)">${usedFns.size}</div>
+      <div class="stat-label">Functions Used</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:var(--cyan)">${htmlFiles.length}</div>
+      <div class="stat-label">HTML Files</div>
+    </div>
+  `;
+
+  // Function list
+  document.getElementById('fnList').innerHTML = gsFunctions.length === 0
+    ? `<div style="color:var(--text3);font-size:11px;padding:8px;">No functions detected${!gsContent ? ' — upload code.gs' : ''}</div>`
+    : gsFunctions.map(fn => {
+        const calls = scriptRunCalls.filter(c => c.fn === fn.name);
+        const used = calls.length > 0;
+        return `
+          <div class="fn-item ${used ? 'called' : 'notcalled'}">
+            <div>
+              <div class="fn-name">function ${fn.name}()</div>
+              ${used ? `<div class="fn-calls">Called in: ${calls.map(c=>c.file).join(', ')}</div>` : `<div class="fn-calls">Not called from HTML</div>`}
+            </div>
+            <span class="fn-badge ${used ? 'fb-used' : 'fb-unused'}">${used ? `×${calls.length} call${calls.length>1?'s':''}` : 'unused'}</span>
+          </div>
+        `;
+      }).join('');
+
+  // Calls list
+  document.getElementById('callList').innerHTML = scriptRunCalls.length === 0
+    ? `<div style="color:var(--text3);font-size:11px;padding:8px;">No <code>google.script.run</code> calls detected${htmlFiles.length===0?' — upload HTML files':''}</div>`
+    : scriptRunCalls.map(c => `
+        <div class="call-item">
+          <div class="call-fn">→ ${c.fn}()</div>
+          <div class="call-src">in ${c.file}</div>
+          ${c.context ? `<div style="color:var(--text3);font-size:10px;margin-top:3px;font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px;">${escHtml(c.context)}</div>` : ''}
+        </div>
+      `).join('');
+
+  // Generated doPost code
+  document.getElementById('genCode').innerHTML = syntaxHighlight(generateDoPost());
+
+  // Shim code
+  document.getElementById('shimCode').innerHTML = syntaxHighlight(generateShimPreview());
+
+  document.getElementById('analyzeEmpty').style.display = 'none';
+  document.getElementById('analyzeContent').style.display = 'block';
+}
+
+function parseGsFunctions(code) {
+  const fns = [];
+  const re = /function\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(/g;
+  let m;
+  while ((m = re.exec(code)) !== null) {
+    const name = m[1];
+    // skip reserved/lifecycle
+    if (!['doGet','doPost','onOpen','onEdit','onFormSubmit'].includes(name)) {
+      fns.push({ name });
+    }
+  }
+  return fns;
+}
+
+function parseScriptRunCalls(html, filename) {
+  const calls = [];
+  const re = /google\.script\.run(?:\.withSuccessHandler\([^)]*\))?(?:\.withFailureHandler\([^)]*\))?\.([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(/g;
+  let m;
+  while ((m = re.exec(html)) !== null) {
+    const lineStart = html.lastIndexOf('\n', m.index) + 1;
+    const lineEnd = html.indexOf('\n', m.index);
+    const context = html.slice(lineStart, lineEnd !== -1 ? lineEnd : lineStart + 100).trim();
+    calls.push({ fn: m[1], file: filename, context: context.slice(0,80) });
+  }
+  return calls;
+}
+
+function generateDoPost() {
+  const fnNames = gsFunctions.map(f => f.name);
+  const cases = fnNames.map(n =>
+    `    case '${n}': result = ${n}.apply(this, args); break;`
+  ).join('\n');
+  return `// ============================================
+// AUTO-GENERATED by GAS→APK Studio
+// Append this to your code.gs before deploying
+// ============================================
+
+function doPost(e) {
+  try {
+    var payload = JSON.parse(e.postData.contents);
+    var action  = payload.action;
+    var args    = payload.args || [];
+    var result;
+
+    switch (action) {
+${cases || '    // no functions detected'}
+      default:
+        return ContentService
+          .createTextOutput(JSON.stringify({error:'Unknown action: '+action}))
+          .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    return ContentService
+      .createTextOutput(JSON.stringify({success:true, data:result}))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch(err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({error:err.toString()}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  // Serve HTML if needed, or handle GET params
+  return HtmlService.createHtmlOutput('<p>GAS APK API running</p>');
+}`;
+}
+
+function generateShimPreview() {
+  return `/* google.script.run polyfill — auto-injected by GAS→APK Studio */
+(function() {
+  var GAS_URL = '__GAS_URL__'; // replaced at build time
+
+  function Runner() {
+    this._success = function() {};
+    this._failure = function(e) { console.error(e); };
+  }
+
+  Runner.prototype.withSuccessHandler = function(fn) {
+    this._success = fn; return this;
+  };
+  Runner.prototype.withFailureHandler = function(fn) {
+    this._failure = fn; return this;
+  };
+
+  // Proxy: runner.functionName(args) → fetch(GAS_URL)
+  function makeProxy(runner) {
+    return new Proxy(runner, {
+      get: function(target, prop) {
+        if (prop in target) return target[prop].bind(target);
+        return function() {
+          var args = Array.prototype.slice.call(arguments);
+          fetch(GAS_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: prop, args: args })
+          })
+          .then(function(r) { return r.json(); })
+          .then(function(d) {
+            if (d.error) { target._failure(new Error(d.error)); }
+            else { target._success(d.data !== undefined ? d.data : d); }
+          })
+          .catch(function(err) { target._failure(err); });
+        };
+      }
+    });
+  }
+
+  window.google = {
+    script: {
+      run: new Proxy({}, {
+        get: function(_, prop) {
+          var runner = makeProxy(new Runner());
+          if (prop === 'withSuccessHandler' || prop === 'withFailureHandler') {
+            return runner[prop].bind(runner);
+          }
+          return runner[prop];
+        }
+      }),
+      history: { push: function(){}, replace: function(){} },
+      host: {
+        close: function() { window.close(); },
+        setHeight: function() {},
+        setWidth: function() {}
+      },
+      url: { getLocation: function(cb) { cb({}); } }
+    }
+  };
+})();`;
+}
+
+// ====================================================
+// PREVIEW
+// ====================================================
+function updateEntrySelect() {
+  const sel = document.getElementById('entryFile');
+  sel.innerHTML = '<option value="">-- select main file --</option>' +
+    htmlFiles.map(f => `<option value="${f.name}">${f.name}</option>`).join('');
+  if (htmlFiles.length === 1) sel.value = htmlFiles[0].name;
+}
+function updatePreviewSelect() {
+  const sel = document.getElementById('previewSelect');
+  sel.innerHTML = '<option value="">-- select file --</option>' +
+    htmlFiles.map(f => `<option value="${f.name}">${f.name}</option>`).join('');
+  if (htmlFiles.length > 0) { sel.value = htmlFiles[0].name; updatePreview(); }
+}
+function updatePreview() {
+  const name = document.getElementById('previewSelect').value;
+  const file = htmlFiles.find(f => f.name === name);
+  const iframe = document.getElementById('previewIframe');
+  const empty = document.getElementById('previewEmpty');
+  if (!file) { iframe.style.display='none'; empty.style.display='flex'; return; }
+  empty.style.display='none';
+  iframe.style.display='block';
+  // Inject mock shim for preview
+  const shim = generateShimPreview().replace('__GAS_URL__','https://mock-preview-mode');
+  const mockShim = `
+<script>
+(function(){
+  var GAS_URL='PREVIEW_MODE';
+  function Runner(){this._s=function(){};this._f=function(e){console.error(e)};}
+  Runner.prototype.withSuccessHandler=function(fn){this._s=fn;return this;};
+  Runner.prototype.withFailureHandler=function(fn){this._f=fn;return this;};
+  function makeProxy(r){return new Proxy(r,{get:function(t,p){if(p in t)return t[p].bind(t);return function(){setTimeout(function(){t._s({preview:true,message:'[Preview Mode] '+p+'() called'});},200);}}});}
+  window.google={script:{run:new Proxy({},{get:function(_,p){var r=makeProxy(new Runner());return r[p]||r.withSuccessHandler;}}),history:{push:function(){}},host:{close:function(){},setHeight:function(){},setWidth:function(){}},url:{getLocation:function(cb){cb({};)}}}};
+})();
+<\/script>`;
+  const injected = file.content.replace('</head>', mockShim + '</head>') || file.content;
+  iframe.srcdoc = injected;
+}
+function setDevice(type, btn) {
+  document.querySelectorAll('.device-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const sh = document.getElementById('phoneShell');
+  sh.className = 'phone-shell ' + type;
+  const sc = sh.querySelector('.phone-screen');
+  if (type==='desktop') {
+    sc.style.height = 'calc(580px - 6px)';
+  } else {
+    sc.style.height = 'calc(700px - 26px - 6px)';
+  }
+}
+
+// ====================================================
+// BUILD
+// ====================================================
+async function startBuild() {
+  if (building) return;
+
+  // Validate
+  const gasUrl = v('gasUrl');
+  const apkName = v('apkName');
+  const pkgName = v('pkgName');
+  const ghUser = v('ghUser');
+  const ghToken = v('ghToken');
+  const ghRepo = v('ghRepo');
+  const entry = document.getElementById('entryFile').value || (htmlFiles[0]?.name);
+  const isPrivate = document.querySelector('input[name="vis"]:checked').value === 'true';
+
+  const errors = [];
+  if (!gsContent) errors.push('Upload code.gs');
+  if (!htmlFiles.length) errors.push('Upload at least one HTML file');
+  if (!gasUrl) errors.push('GAS Web App URL required');
+  if (!apkName) errors.push('App Name required');
+  if (!pkgName || !/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*){2,}$/.test(pkgName)) errors.push('Valid Package Name required');
+  if (!ghUser) errors.push('GitHub Username required');
+  if (!ghToken) errors.push('GitHub Token required');
+  if (!ghRepo) errors.push('Repository Name required');
+
+  if (errors.length) {
+    switchTabByName('configure');
+    errors.forEach(e => toast('r', e));
+    return;
+  }
+
+  building = true;
+  document.getElementById('buildBtn').disabled = true;
+  document.getElementById('resultBox').classList.remove('show');
+  clearLog();
+  resetSteps();
+  setBuildStatus('running','Building...');
+
+  const cfg = { gasUrl, apkName, pkgName, verName: v('verName')||'1.0.0', verCode: v('verCode')||'1', ghUser, ghToken, ghRepo, isPrivate, entry };
+
+  try {
+    // STEP 1 - Validate
+    setStep('st1','active','validating');
+    log('c','Validating configuration...');
+    await wait(400);
+    log('g', `App: ${cfg.apkName} | ${cfg.pkgName} | v${cfg.verName}`);
+    log('g', `GAS URL: ${cfg.gasUrl.slice(0,60)}...`);
+    log('g', `Files: ${htmlFiles.length} HTML + code.gs`);
+    setStep('st1','done','✓ done');
+
+    // STEP 2 - Create repo
+    setStep('st2','active','creating...');
+    log('c', `Creating GitHub repo: ${cfg.ghUser}/${cfg.ghRepo}`);
+    const rRes = await ghApi('POST','https://api.github.com/user/repos', cfg.ghToken, {
+      name: cfg.ghRepo, private: cfg.isPrivate,
+      description: `GAS→APK build: ${cfg.apkName}`,
+      auto_init: false
+    });
+    if (!rRes.ok) {
+      const err = await rRes.json();
+      if (!err.errors?.[0]?.message?.includes('already exists')) throw new Error(err.message);
+      log('y', 'Repo already exists — continuing');
+    } else {
+      log('g', `Repo created (${cfg.isPrivate?'private':'public'})`);
+    }
+    await wait(600);
+    setStep('st2','done','✓ done');
+
+    // STEP 3 - Push Cordova
+    setStep('st3','active','uploading...');
+    log('c','Uploading Cordova project structure...');
+    await push(cfg, 'config.xml', genConfigXml(cfg));
+    log('g','config.xml ✓');
+    await push(cfg, 'package.json', genPackageJson(cfg));
+    log('g','package.json ✓');
+    // Upload modified code.gs
+    const modifiedGs = (gsContent||'') + '\n\n' + generateDoPost();
+    await push(cfg, 'gas/Code.gs', modifiedGs);
+    log('g','gas/Code.gs (with doPost) ✓');
+    setStep('st3','done','✓ done');
+
+    // STEP 4 - Inject shim into HTML files
+    setStep('st4','active','injecting...');
+    log('c','Injecting google.script.run polyfill into HTML files...');
+    for (const file of htmlFiles) {
+      const injected = injectShim(file.content, cfg.gasUrl);
+      const path = `www/${file.name}`;
+      await push(cfg, path, injected);
+      log('g', `${path} ✓ (shim injected)`);
+    }
+    // Write entry index redirect if entry isn't index.html
+    if (cfg.entry && cfg.entry !== 'index.html') {
+      const redirect = `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=${cfg.entry}"></head></html>`;
+      await push(cfg, 'www/index.html', redirect);
+      log('g', `www/index.html → redirect to ${cfg.entry} ✓`);
+    }
+    setStep('st4','done','✓ done');
+
+    // STEP 5 - Push workflow
+    setStep('st5','active','uploading...');
+    log('c','Uploading GitHub Actions build workflow...');
+    await push(cfg, '.github/workflows/build.yml', genWorkflow(cfg));
+    log('g','.github/workflows/build.yml ✓');
+    await wait(400);
+    setStep('st5','done','✓ done');
+
+    // STEP 6 - Confirm
+    setStep('st6','active','checking...');
+    log('c','Confirming build trigger...');
+    await wait(800);
+    log('g', `Build at: github.com/${cfg.ghUser}/${cfg.ghRepo}/actions`);
+    log('g','APK will be available as artifact after ~5-10 min');
+    setStep('st6','done','✓ done');
+
+    setBuildStatus('success','Build Triggered!');
+    const repoBase = `https://github.com/${cfg.ghUser}/${cfg.ghRepo}`;
+    document.getElementById('actionsUrl').href = repoBase + '/actions';
+    document.getElementById('repoUrl').href = repoBase;
+    document.getElementById('resultBox').classList.add('show');
+    toast('g','Build triggered! Check GitHub Actions.');
+
+  } catch(err) {
+    log('r','ERROR: ' + err.message);
+    setBuildStatus('error','Build Failed');
+    toast('r', err.message);
+    document.querySelectorAll('.step-item.s-active').forEach(s => {
+      s.className='step-item s-error';
+      s.querySelector('.step-tag').textContent='✗ failed';
+    });
+  }
+
+  building = false;
+  document.getElementById('buildBtn').disabled = false;
+}
+
+// ====================================================
+// SHIM INJECTOR
+// ====================================================
+function injectShim(htmlContent, gasUrl) {
+  const shim = `<script>
+/* google.script.run polyfill by GAS→APK Studio */
+(function(){
+  var GAS_URL="${gasUrl}";
+  function Runner(){this._s=function(){};this._f=function(e){console.error('[GAS-APK]',e);};}
+  Runner.prototype.withSuccessHandler=function(fn){this._s=fn;return this;};
+  Runner.prototype.withFailureHandler=function(fn){this._f=fn;return this;};
+  function mkProxy(r){
+    return new Proxy(r,{
+      get:function(t,p){
+        if(p in t)return t[p].bind(t);
+        return function(){
+          var args=Array.prototype.slice.call(arguments);
+          fetch(GAS_URL,{
+            method:'POST',
+            headers:{'Content-Type':'text/plain;charset=utf-8'},
+            body:JSON.stringify({action:p,args:args})
+          }).then(function(res){return res.json();})
+          .then(function(d){
+            if(d&&d.error){t._f(new Error(d.error));}
+            else{t._s(d&&d.data!==undefined?d.data:d);}
+          }).catch(function(e){t._f(e);});
+        };
+      }
+    });
+  }
+  window.google={
+    script:{
+      run:new Proxy({},{
+        get:function(_,p){
+          var r=mkProxy(new Runner());
+          if(p==='withSuccessHandler'||p==='withFailureHandler')return r[p].bind(r);
+          return r[p];
+        }
+      }),
+      history:{push:function(){},replace:function(){}},
+      host:{close:function(){window.close();},setHeight:function(){},setWidth:function(){}},
+      url:{getLocation:function(cb){cb({});}}
+    }
+  };
+})();
+<\/script>`;
+
+  if (htmlContent.includes('</head>')) {
+    return htmlContent.replace('</head>', shim + '\n</head>');
+  } else if (htmlContent.includes('<body')) {
+    return htmlContent.replace('<body', shim + '\n<body');
+  }
+  return shim + '\n' + htmlContent;
+}
+
+// ====================================================
+// FILE GENERATORS
+// ====================================================
+function genConfigXml(c) {
+  return `<?xml version='1.0' encoding='utf-8'?>
+<widget id="${c.pkgName}" version="${c.verName}" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <n>${c.apkName}</n>
+    <description>Built with GAS→APK Studio</description>
+    <author email="dev@example.com">Developer</author>
+    <content src="${c.entry || 'index.html'}" />
+    <access origin="*" />
+    <access origin="${c.gasUrl}" />
+    <allow-intent href="http://*/*" />
+    <allow-intent href="https://*/*" />
+    <preference name="DisallowOverscroll" value="true" />
+    <preference name="android-minSdkVersion" value="22" />
+    <preference name="android-targetSdkVersion" value="34" />
+    <preference name="AndroidWindowSplashScreenAnimatedIcon" value="res/screen/android/splash.png" />
+    <preference name="MixedContentMode" value="2" />
+    <platform name="android">
+        <allow-intent href="market:*" />
+        <preference name="android-targetSdkVersion" value="34" />
+    </platform>
+</widget>`;
+}
+
+function genPackageJson(c) {
+  return JSON.stringify({
+    name: c.ghRepo,
+    displayName: c.apkName,
+    version: c.verName,
+    description: `GAS→APK build: ${c.apkName}`,
+    cordova: { platforms: ["android"] }
+  }, null, 2);
+}
+
+function genWorkflow(c) {
+  return `name: Build Android APK (GAS→APK Studio)
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Cordova
+        run: npm install -g cordova@12
+
+      - name: Add Android Platform
+        run: cordova platform add android@13 --no-telemetry
+
+      - name: Build Debug APK
+        run: cordova build android --debug --no-telemetry
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.repository.name }}-v${c.verName}-debug
+          path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
+
+      - name: Print Summary
+        run: |
+          echo "## Build Complete ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- **App**: ${c.apkName}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Package**: ${c.pkgName}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${c.verName} (${c.verCode})" >> $GITHUB_STEP_SUMMARY
+          echo "- **GAS URL**: ${c.gasUrl}" >> $GITHUB_STEP_SUMMARY
+`;
+}
+
+// ====================================================
+// GITHUB API
+// ====================================================
+async function ghApi(method, url, token, body) {
+  return fetch(url, {
+    method,
+    headers: {
+      'Authorization': `token ${token}`,
+      'Content-Type': 'application/json',
+      'Accept': 'application/vnd.github.v3+json'
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+}
+
+async function push(cfg, path, content) {
+  const url = `https://api.github.com/repos/${cfg.ghUser}/${cfg.ghRepo}/contents/${path}`;
+  let sha = null;
+  try {
+    const check = await ghApi('GET', url, cfg.ghToken);
+    if (check.ok) { sha = (await check.json()).sha; }
+  } catch(e) {}
+  const body = { message: sha ? `Update ${path}` : `Add ${path}`, content: toB64(content) };
+  if (sha) body.sha = sha;
+  const res = await ghApi('PUT', url, cfg.ghToken, body);
+  if (!res.ok) { const e = await res.json(); throw new Error(`Push ${path} failed: ${e.message}`); }
+}
+
+function toB64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let b = '';
+  bytes.forEach(byte => b += String.fromCharCode(byte));
+  return btoa(b);
+}
+
+// ====================================================
+// BUILD UI HELPERS
+// ====================================================
+function clearLog() { document.getElementById('buildLog').innerHTML = ''; }
+function log(type, msg) {
+  const el = document.getElementById('buildLog');
+  const t = new Date().toTimeString().slice(0,8);
+  const d = document.createElement('div');
+  d.className = 'l';
+  d.innerHTML = `<span class="lt">${t}</span><span class="lm l${type}">${msg}</span>`;
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
+}
+function resetSteps() {
+  for (let i=1;i<=6;i++) {
+    const s=document.getElementById('st'+i);
+    s.className='step-item';
+    s.querySelector('.step-tag').textContent='pending';
+  }
+}
+function setStep(id, state, tag) {
+  const s = document.getElementById(id);
+  const map = { active:'s-active', done:'s-done', error:'s-error' };
+  s.className = 'step-item ' + (map[state]||'');
+  s.querySelector('.step-tag').textContent = tag;
+}
+function setBuildStatus(state, text) {
+  const dot = document.getElementById('bDot');
+  const colors = { running: 'var(--cyan)', success: 'var(--green)', error: 'var(--red)' };
+  dot.style.background = colors[state] || 'var(--text3)';
+  if (state==='running') dot.style.boxShadow='0 0 8px '+colors.running; else dot.style.boxShadow='none';
+  document.getElementById('bStatus').textContent = text;
+}
+
+// ====================================================
+// MISC
+// ====================================================
+function v(id) { return document.getElementById(id)?.value?.trim()||''; }
+function wait(ms) { return new Promise(r=>setTimeout(r,ms)); }
+function fmtSize(bytes) {
+  if (bytes < 1024) return bytes+'B';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(1)+'KB';
+  return (bytes/1024/1024).toFixed(2)+'MB';
+}
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function syntaxHighlight(code) {
+  return escHtml(code)
+    .replace(/\b(function|var|const|let|return|switch|case|break|default|if|else|try|catch|new|this|typeof|true|false|null|undefined)\b/g,'<span class="kw">$1</span>')
+    .replace(/(\/\/[^\n]*)/g,'<span class="cmt">$1</span>')
+    .replace(/('.*?'|".*?")/g,'<span class="str">$1</span>');
+}
+
+function updateHeaderStatus() {
+  const gsDot = document.getElementById('hDotGs');
+  const gsLabel = document.getElementById('hLabelGs');
+  const htmlDot = document.getElementById('hDotHtml');
+  const htmlLabel = document.getElementById('hLabelHtml');
+
+  if (gsContent) {
+    gsDot.className='dot green';
+    gsLabel.textContent = gsFileName;
+  } else {
+    gsDot.className='dot gray';
+    gsLabel.textContent = 'code.gs: none';
+  }
+
+  if (htmlFiles.length>0) {
+    htmlDot.className='dot cyan';
+    htmlLabel.textContent = `HTML: ${htmlFiles.length} file${htmlFiles.length>1?'s':''}`;
+  } else {
+    htmlDot.className='dot gray';
+    htmlLabel.textContent = 'HTML: 0 files';
+  }
+}
+
+function toggleSection(id) {
+  const el=document.getElementById(id);
+  el.style.display = el.style.display==='none'?'block':'none';
+}
+
+function saveForm() {
+  try {
+    localStorage.setItem('gapk', JSON.stringify({
+      gasUrl: v('gasUrl'), apkName: v('apkName'), pkgName: v('pkgName'),
+      verName: v('verName'), verCode: v('verCode'),
+      ghUser: v('ghUser'), ghRepo: v('ghRepo')
+    }));
+  } catch(e){}
+}
+
+// TAB SWITCHING
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  if (name==='analyze') runAnalysis();
+  if (name==='preview') updatePreview();
+}
+function switchTabByName(name) {
+  const tabs = ['upload','analyze','configure','preview','build'];
+  const btns = document.querySelectorAll('.tab');
+  const idx = tabs.indexOf(name);
+  if (idx>=0) switchTab(name, btns[idx]);
+}
+
+function toast(type, msg) {
+  const c = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = 'toast '+type;
+  const icons = {g:'✓',r:'✗',c:'ℹ'};
+  el.textContent = (icons[type]||'·')+' '+msg;
+  c.appendChild(el);
+  setTimeout(()=>el.remove(),3200);
+}
+
+// Load saved form data
+(function(){
+  try {
+    const s = JSON.parse(localStorage.getItem('gapk')||'{}');
+    ['gasUrl','apkName','pkgName','verName','verCode','ghUser','ghRepo'].forEach(k=>{
+      if (s[k]) { const el=document.getElementById(k); if(el) el.value=s[k]; }
+    });
+  } catch(e){}
+})();
+</script>
+</body>
+</html>
